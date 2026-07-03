@@ -1,0 +1,9 @@
+{
+  "TEST-HOME": {
+    "id": "TEST-HOME",
+    "space": "QA",
+    "title": "Automated Test Reports",
+    "body": "This space collects AI-generated test execution summaries.\n\nChild pages are published automatically by the test-case generation workflow.",
+    "children": []
+  }
+}

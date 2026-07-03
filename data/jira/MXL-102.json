@@ -1,0 +1,28 @@
+{
+  "key": "MXL-102",
+  "summary": "Bandwidth string parser (Kbps/Mbps/Gbps -> Mbps)",
+  "issue_type": "Story",
+  "status": "Ready for Test",
+  "component": "provisioning",
+  "target_module": "sut/provisioning.py",
+  "target_function": "parse_bandwidth",
+  "description": "As a provisioning service, I need to convert a human-entered bandwidth string into a normalized integer number of Mbps, so downstream rate-limiting logic can work with a single unit.\n\nThe function parse_bandwidth(value: str) -> int returns the bandwidth in Mbps.",
+  "acceptance_criteria": [
+    "'100Mbps' returns 100.",
+    "'1Gbps' returns 1000.",
+    "'2000Kbps' returns 2 (integer Mbps, rounded down).",
+    "Parsing is case-insensitive and tolerant of internal spaces (e.g. '1 gbps').",
+    "A bare number with no unit (e.g. '50') is treated as Mbps and returns 50.",
+    "An unknown unit, a negative value, or unparseable text raises ValueError."
+  ],
+  "flowchart_mermaid": "flowchart TD\n    A[Receive value string] --> B[Trim + lowercase + strip spaces]\n    B --> C{Ends with known unit?}\n    C -->|kbps/mbps/gbps| D[Set conversion factor]\n    C -->|no unit| E[Factor = 1 Mbps]\n    D --> F{Numeric part parseable?}\n    E --> F\n    F -->|no| G[Raise ValueError]\n    F -->|yes| H{Number < 0?}\n    H -->|yes| G\n    H -->|no| I[Return int number * factor]",
+  "examples": [
+    {"input": "100Mbps", "returns": 100},
+    {"input": "1Gbps", "returns": 1000},
+    {"input": "2000Kbps", "returns": 2},
+    {"input": "50", "returns": 50},
+    {"input": "1 gbps", "returns": 1000},
+    {"input": "5Tbps", "raises": "ValueError"},
+    {"input": "-1Mbps", "raises": "ValueError"}
+  ]
+}

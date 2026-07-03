@@ -1,0 +1,27 @@
+{
+  "key": "MXL-103",
+  "summary": "MAC address normalization",
+  "issue_type": "Story",
+  "status": "Ready for Test",
+  "component": "provisioning",
+  "target_module": "sut/provisioning.py",
+  "target_function": "normalize_mac",
+  "description": "As a provisioning service, I need to normalize operator-supplied MAC addresses to a single canonical form before storing them, so that addresses written with different separators or casing compare equal.\n\nThe function normalize_mac(mac: str) -> str returns the MAC in upper-case colon form 'AA:BB:CC:DD:EE:FF'.",
+  "acceptance_criteria": [
+    "A colon-separated address 'aa:bb:cc:dd:ee:ff' normalizes to 'AA:BB:CC:DD:EE:FF'.",
+    "A hyphen-separated address 'AA-BB-CC-DD-EE-FF' normalizes to 'AA:BB:CC:DD:EE:FF'.",
+    "A Cisco dotted address 'aabb.ccdd.eeff' normalizes to 'AA:BB:CC:DD:EE:FF'.",
+    "Mixed-case hex is upper-cased, e.g. '1a:2b:3c:4d:5e:6f' -> '1A:2B:3C:4D:5E:6F'.",
+    "An address with non-hex characters (e.g. 'gg:bb:cc:dd:ee:ff') raises ValueError.",
+    "An address with the wrong number of digits (e.g. 'aa:bb:cc') raises ValueError."
+  ],
+  "flowchart_mermaid": "flowchart TD\n    A[Receive mac string] --> B[Strip separators : - .]\n    B --> C{Exactly 12 chars?}\n    C -->|no| E[Raise ValueError]\n    C -->|yes| D{All hex digits?}\n    D -->|no| E\n    D -->|yes| F[Upper-case and split into pairs]\n    F --> G[Join with colons -> AA:BB:...]",
+  "examples": [
+    {"input": "aa:bb:cc:dd:ee:ff", "returns": "AA:BB:CC:DD:EE:FF"},
+    {"input": "AA-BB-CC-DD-EE-FF", "returns": "AA:BB:CC:DD:EE:FF"},
+    {"input": "aabb.ccdd.eeff", "returns": "AA:BB:CC:DD:EE:FF"},
+    {"input": "1a:2b:3c:4d:5e:6f", "returns": "1A:2B:3C:4D:5E:6F"},
+    {"input": "gg:bb:cc:dd:ee:ff", "raises": "ValueError"},
+    {"input": "aa:bb:cc", "raises": "ValueError"}
+  ]
+}

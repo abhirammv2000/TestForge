@@ -1,0 +1,29 @@
+{
+  "key": "MXL-101",
+  "summary": "IPv4 address validation for device provisioning",
+  "issue_type": "Story",
+  "status": "Ready for Test",
+  "component": "provisioning",
+  "target_module": "sut/provisioning.py",
+  "target_function": "validate_ipv4",
+  "description": "As a provisioning service, I need to validate that an operator-supplied IPv4 address is well-formed before pushing it to a device, so that malformed addresses are rejected early.\n\nThe function validate_ipv4(address: str) -> bool must return True only for a valid dotted-quad IPv4 address and False otherwise.",
+  "acceptance_criteria": [
+    "A valid address like '192.168.1.10' returns True.",
+    "The boundary values '0.0.0.0' and '255.255.255.255' return True.",
+    "An octet greater than 255 (e.g. '256.1.1.1') returns False.",
+    "Fewer or more than four octets (e.g. '1.2.3' or '1.2.3.4.5') returns False.",
+    "Octets with leading zeros (e.g. '192.168.01.1') return False.",
+    "Empty string, non-numeric octets, and surrounding whitespace return False."
+  ],
+  "flowchart_mermaid": "flowchart TD\n    A[Receive address string] --> B{Split on '.'}\n    B -->|not 4 parts| F[Return False]\n    B -->|4 parts| C{For each octet}\n    C -->|not all digits| F\n    C -->|leading zero| F\n    C -->|value > 255| F\n    C -->|all octets valid| G[Return True]",
+  "examples": [
+    {"input": "192.168.1.10", "returns": true},
+    {"input": "0.0.0.0", "returns": true},
+    {"input": "255.255.255.255", "returns": true},
+    {"input": "256.1.1.1", "returns": false},
+    {"input": "1.2.3", "returns": false},
+    {"input": "192.168.01.1", "returns": false},
+    {"input": "", "returns": false},
+    {"input": "abc", "returns": false}
+  ]
+}
