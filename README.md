@@ -103,6 +103,21 @@ help:
 Decoding runs at temperature 0 with a repetition penalty and an output cap, which
 stops the runaway repetition small models tend to fall into.
 
+## Tests
+
+The workflow's own code (the quality gate, the pytest/Robot result parsers, the
+mock store, the report builder) has a plain pytest suite under `tests/`, no
+Ollama required:
+
+```bash
+pytest
+```
+
+This only covers the plumbing around the LLM, not the LLM's own output - there's
+no way to unit-test what a model will generate. Judging generated-test quality is
+done by actually running the pipeline against the sample tickets (see the numbers
+above).
+
 ## Layout
 
 ```
@@ -110,6 +125,7 @@ cli.py                 the orchestrator (fetch -> generate -> run -> analyze -> 
 sut/provisioning.py    the code the generated tests run against
 data/jira/*.json       mock Jira tickets
 data/confluence/       mock Confluence store
+tests/                 unit tests for the workflow code itself
 mcp_server/
   server.py            MCP server exposing the Jira/Bitbucket/Confluence tools
   mock_store.py        file-backed data behind those tools
