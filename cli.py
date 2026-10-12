@@ -29,11 +29,10 @@ RESULTS_DIR = PROJECT_ROOT / "results"
 
 
 MAX_REPAIRS = 3
-# Repairing a test that RAN but FAILED is off by default: a test-generation tool
-# must report genuine failures, not silently rewrite tests until they pass (which
-# would hide real product bugs). Syntax/"failed to execute" repair is always on.
-# Set REPAIR_ON_FAILURE=1 to also repair failing tests against the bundled
-# known-correct reference module (handy when iterating on prompts).
+# Repairing a test that RAN but FAILED is off by default, so failures stay visible
+# instead of getting silently rewritten until they pass. Syntax/"failed to execute"
+# repair is always on. Set REPAIR_ON_FAILURE=1 to also repair failing tests against
+# the bundled known-correct reference module (handy when iterating on prompts).
 REPAIR_ON_FAILURE = os.getenv("REPAIR_ON_FAILURE", "0") not in ("0", "false", "False")
 
 

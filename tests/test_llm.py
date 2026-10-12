@@ -1,9 +1,9 @@
 """Tests for workflow/llm.py's pure logic: code-block extraction and model
 selection. No real Ollama call is made.
 
-Note: a real .env in this repo sets OLLAMA_MODEL, and llm.py loads it at
-import time, so tests that check the "no override" path must explicitly
-clear the env var rather than assume a clean environment.
+Note: this repo's .env sets OLLAMA_MODEL, and llm.py loads it at import
+time, so tests that check the "no override" path must explicitly clear
+the env var rather than assume a clean environment.
 """
 
 from workflow import llm

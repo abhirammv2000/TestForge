@@ -22,8 +22,8 @@ Jira (MCP) --> Bitbucket (MCP) --> local LLM --> pytest + robot files
 
 The repo ships a small module to test, [sut/provisioning.py](sut/provisioning.py).
 Each Jira ticket describes what one of its functions should do, Bitbucket serves
-the source, and the generated tests actually run against it. So the pass/fail
-counts come from a real test run, not from the model claiming things passed.
+the source, and the generated tests run against it directly. The pass/fail counts
+reflect an actual test run rather than the model's own claim.
 
 ## What a run does
 
@@ -95,8 +95,8 @@ help:
   missing `import pytest`, or a robot file that redefines the library keyword. A
   rejected file is retried.
 - If a file won't execute, the error is fed back to the model to fix it. Tests
-  that run but fail are reported as-is, not rewritten until they pass - otherwise
-  the tool would just hide real bugs. (Set `REPAIR_ON_FAILURE=1` to change that.)
+  that run but fail are reported as-is, not rewritten until they pass, otherwise
+  the tool would just hide bugs. (Set `REPAIR_ON_FAILURE=1` to change that.)
 - Each run deletes the previous `output.xml` / junit before running, so a broken
   run can't accidentally report the last run's pass count.
 
@@ -113,19 +113,51 @@ Ollama required:
 pytest
 ```
 
-This only covers the plumbing around the LLM, not the LLM's own output - there's
-no way to unit-test what a model will generate. Judging generated-test quality is
-done by actually running the pipeline against the sample tickets (see the numbers
-above).
+`tests/` covers the plumbing around the model and the mutation checker described next. What the model
+writes is measured separately, because a unit test cannot say whether generated tests are any good.
+
+## How good are the generated tests?
+
+"All tests pass" is weak evidence, because a test file with no useful assertions passes too. So `quality/` asks a
+harder question. It seeds 28 deliberate bugs into `sut/provisioning.py` (a comparison off by one, a dropped check,
+a wrong constant) and counts how many of them make the generated tests fail.
+
+```bash
+python -m quality.mutation_check     # uses generated_tests/, or examples/last_run/ if there is none
+```
+
+Result for the tests `qwen2.5-coder:7b` wrote in the last run, which are saved in [examples/last_run/](examples/last_run/):
+
+| function | real bugs | caught by its own tests | missed |
+|---|---|---|---|
+| `validate_ipv4` | 7 | 4 (57%) | five parts accepted, non-digits accepted, non-string input |
+| `parse_bandwidth` | 8 | 5 (62%) | zero rejected, rounding up, non-string input |
+| `normalize_mac` | 7 | 6 (86%) | thirteen hex digits accepted |
+| `provision_device` | 6 | 4 (67%) | bandwidth not validated, error list dropped |
+| **all** | 28 | 19 (68%) | |
+
+The model writes the cases the ticket's examples show and misses boundaries the docstring only states, such as
+five-part addresses or zero bandwidth. So "pytest 8/8" was true and told you much less than it sounded.
+
+What this does and does not show:
+
+- The bugs are 28 that I wrote, in one small module. It measures this model on this code, not test generators in general.
+- A bug only counts if it changes the function's answer on at least one probe input. One edit did nothing a caller
+  could see (removing the empty-string check, because the next line raises the same error) and was left out.
+- Only the pytest files are measured, not the Robot ones.
+- The checker itself is tested both ways: a thorough hand-written suite in `tests/reference_suite/` catches every
+  counted bug, and an empty suite catches none ([tests/test_mutation_check.py](tests/test_mutation_check.py)).
 
 ## Layout
 
 ```
 cli.py                 the orchestrator (fetch -> generate -> run -> analyze -> publish)
 sut/provisioning.py    the code the generated tests run against
+quality/               seeded bugs and the mutation check that scores the generated tests
+examples/last_run/     the tests the model wrote in the last run
 data/jira/*.json       mock Jira tickets
 data/confluence/       mock Confluence store
-tests/                 unit tests for the workflow code itself
+tests/                 unit tests for the workflow code, plus a hand-written reference suite
 mcp_server/
   server.py            MCP server exposing the Jira/Bitbucket/Confluence tools
   mock_store.py        file-backed data behind those tools
