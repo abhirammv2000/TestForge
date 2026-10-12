@@ -1,8 +1,7 @@
 """Tests for the pytest/Robot result parsers in workflow/run_tests.py.
 
-These use fixture XML matching the real formats (checked against actual
-pytest --junitxml and robot --outputdir output), so no subprocess or LLM
-call is needed to run them.
+These use fixture XML matching the pytest --junitxml and robot --outputdir
+output formats, so no subprocess or LLM call is needed to run them.
 """
 
 from pathlib import Path
@@ -111,7 +110,7 @@ def test_failed_to_execute_pytest_collection_error():
 
 
 def test_failed_to_execute_pytest_normal_test_failure():
-    # rc=1 with real cases collected means tests ran and some failed legitimately.
+    # rc=1 with cases collected means tests ran and some failed legitimately.
     result = {"framework": "pytest", "return_code": 1, "total": 3}
     assert run_tests.failed_to_execute(result) is False
 

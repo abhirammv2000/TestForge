@@ -3,7 +3,7 @@ Generate Robot Framework + pytest test files from a Jira issue and its source.
 
 Before a generated file is used it's checked for the usual junk (empty files,
 `pass`-only stubs, repetition loops) and regenerated if it fails the check, so a
-broken file never gets written out and treated as a real test.
+broken file never gets treated as a valid test.
 """
 
 from __future__ import annotations
@@ -107,7 +107,7 @@ def generate_one(framework: str, issue: dict, source_code: str) -> Path:
     last_code = ""
     for attempt in range(1, MAX_GEN_ATTEMPTS + 1):
         # Deterministic first; escalate temperature on retries so a rejected
-        # output can be escaped with a genuinely different generation.
+        # output can be escaped with a different generation.
         temperature = 0.0 if attempt == 1 else 0.3 * attempt
         raw = llm.generate(prompt, system=prompts.SYSTEM, temperature=temperature)
         code = llm.extract_code_block(raw, _LANG[framework])
@@ -120,7 +120,7 @@ def generate_one(framework: str, issue: dict, source_code: str) -> Path:
         last_code = code
 
     # All attempts were degenerate: write the last one so the failure is visible
-    # and reported honestly downstream, rather than silently swallowed.
+    # downstream, rather than silently swallowed.
     path.write_text(last_code, encoding="utf-8")
     return path
 
@@ -130,7 +130,7 @@ def repair_one(framework: str, path: Path, issue: dict, source_code: str,
     """Ask the LLM to fix a failing test file in place, given its execution error.
 
     A repair that comes back degenerate (e.g. a stub that trivially passes) is
-    refused - we keep the previous file rather than replace a real test with
+    refused - we keep the previous file rather than replace a working test with
     garbage.
     """
     broken = path.read_text(encoding="utf-8")
